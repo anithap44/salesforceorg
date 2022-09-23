@@ -30,7 +30,7 @@ jobs:
            node_modules/sfdx-cli/bin/run --version
            node_modules/sfdx-cli/bin/run plugins --core
      
-     # Store secret for dev hub
+        # Store secret for dev hub
       - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
         shell: bash
         run: |
@@ -53,5 +53,5 @@ jobs:
         with:
           github_token: ${{ github.token }}
           source_ref: ${{ github.ref }}
-          target_branch: 'main'
+          target_branch: 'uat'
           commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}' 
