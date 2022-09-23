@@ -45,7 +45,7 @@ jobs:
             - name: 'Run Apex tests'
               run: sfdx force:apex:test:run -u "anitha.p@joann.b2b.dev"
 
-                 # Merge to uat      
+               # Merge to uat      
             - uses: everlytic/branch-merge@1.1.2
               with:
                 github_token: ${{ github.token }}
