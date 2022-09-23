@@ -45,13 +45,7 @@ jobs:
               run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
 
             
-             # Assign permissionset
-            - name: 'Assign permissionset to default user'
-              run: sfdx force:user:permset:assign -n recipes
-
-            
-
-            # Run Apex tests in scratch org
+             # Run Apex tests in scratch org
             - name: 'Run Apex tests'
               run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20
 
