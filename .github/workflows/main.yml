@@ -1,58 +1,69 @@
+# Unique name for this workflow
 name: CI
 
-# Controls when the workflow will run
+# Definition when the workflow should run
 on:
-  # Triggers the workflow on push or pull request events but only for the "master" branch
-  push:
-    branches: [ "devlop" ]
-  pull_request:
-    branches: [ "devlop" ]
-
-  # Allows you to run this workflow manually from the Actions tab
-  #workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
-jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
-     
-      #install salesforce cli           
-      - name: 'Install Salesforce CLI'
-        run: |
-           npm install sfdx-cli
-           node_modules/sfdx-cli/bin/run --version
-           node_modules/sfdx-cli/bin/run plugins --core
-     
-        # Store secret for dev hub
-      - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
-        shell: bash
-        run: |
-            echo ${{ secrets.DEVHUB_SFDX_URL}} > ./DEVHUB_SFDX_URL.txt
-            secretFileSize=$(wc -c "./DEVHUB_SFDX_URL.txt" | awk '{print $1}')
-            if [ $secretFileSize == 1 ]; then
-                echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
-                exit 1;
-            fi
+    workflow_dispatch:
+    push:
+        branches:
+            - main
         
-        # Authenticate dev hub
-      - name: 'Authenticate Dev Hub'
-        run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
-      
-      - uses: sfdx-actions/setup-sfdx@v1
-        with:
-          sfdx-auth-url: ${{ secrets.AUTH_SECRET }}
-          
-      - name:  'merge uat to main '    
-      - uses: everlytic/branch-merge@1.1.2
-        with:
-          github_token: ${{ github.token }}
-          source_ref: ${{ github.ref }}
-          target_branch: 'uat'
-          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}' 
+# Jobs to be executed
+jobs:
+    format-lint-lwc-tests:
+        runs-on: trailheadapps-Ubuntu
+        steps:
+            # Checkout the source code
+            - name: 'Checkout source code'
+              uses: actions/checkout@v2
+
+           
+            
+
+    
+
+            # Install Salesforce CLI
+            - name: 'Install Salesforce CLI'
+              run: |
+                  wget https://developer.salesforce.com/media/salesforce-cli/sfdx/channels/stable/sfdx-linux-x64.tar.xz
+                  mkdir ~/sfdx
+                  tar xJf sfdx-linux-x64.tar.xz -C ~/sfdx --strip-components 1
+                  echo "$HOME/sfdx/bin" >> $GITHUB_PATH
+                  ~/sfdx/bin/sfdx version
+            # Store secret for dev hub
+            - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
+              shell: bash
+              run: |
+                  echo ${{ secrets.DEVHUB_SFDX_URL}} > ./DEVHUB_SFDX_URL.txt
+                  secretFileSize=$(wc -c "./DEVHUB_SFDX_URL.txt" | awk '{print $1}')
+                  if [ $secretFileSize == 1 ]; then
+                      echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
+                      exit 1;
+                  fi
+            # Authenticate dev hub
+            - name: 'Authenticate Dev Hub'
+              run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
+
+            # Create scratch org
+            - name: 'Create scratch org'
+              run: sfdx force:org:create -f config/project-scratch-def.json -a scratch-org -s -d 1
+
+            
+
+            # Assign permissionset
+            - name: 'Assign permissionset to default user'
+              run: sfdx force:user:permset:assign -n recipes
+
+            
+
+            # Run Apex tests in scratch org
+            - name: 'Run Apex tests'
+              run: sfdx force:apex:test:run -c -r human -d ./tests/apex -w 20
+
+                 # Merge to uat      
+            - uses: everlytic/branch-merge@1.1.2
+              with:
+                github_token: ${{ github.token }}
+                source_ref: ${{ github.ref }}
+                target_branch: 'main'
+                commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
