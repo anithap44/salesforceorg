@@ -4,8 +4,8 @@ name: CI
 # Definition when the workflow should run
 on:
     workflow_dispatch:
-    push:
-        branches:
+    pull_request:
+         branches:
             - main
         
 # Jobs to be executed
