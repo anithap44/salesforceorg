@@ -1,4 +1,3 @@
-
 name: CI
 
 # Controls when the workflow will run
@@ -34,12 +33,12 @@ jobs:
       - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
         shell: bash
         run: |
-                  echo ${{ secrets.DEVHUB_SFDX_URL}} > ./DEVHUB_SFDX_URL.txt
-                  secretFileSize=$(wc -c "./DEVHUB_SFDX_URL.txt" | awk '{print $1}')
-                  if [ $secretFileSize == 1 ]; then
-                      echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
-                      exit 1;
-                  fi
+            echo ${{ secrets.DEVHUB_SFDX_URL}} > ./DEVHUB_SFDX_URL.txt
+            secretFileSize=$(wc -c "./DEVHUB_SFDX_URL.txt" | awk '{print $1}')
+            if [ $secretFileSize == 1 ]; then
+                echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
+                exit 1;
+            fi
          # Authenticate dev hub
       - name: 'Authenticate Dev Hub'
         run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
@@ -53,4 +52,4 @@ jobs:
           github_token: ${{ github.token }}
           source_ref: ${{ github.ref }}
           target_branch: 'main'
-          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'  
+          commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
