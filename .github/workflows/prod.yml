@@ -27,7 +27,7 @@ jobs:
                   echo "$HOME/sfdx/bin" >> $GITHUB_PATH
                   ~/sfdx/bin/sfdx version
             
-            # Store secret for dev hub, Auth URL Store in DEVHUB_SFDX_URL file in  github
+            # Store secret for dev hub, Auth URL Store in DEVHUB_SFDX_URL file in  github secrets
             - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
               shell: bash
               run: |
