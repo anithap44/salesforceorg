@@ -41,7 +41,8 @@ jobs:
               run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
 
             
-             # Run Apex tests in scratch org
+             # Run Apex tests in scratch org , "anitha.p@joann.b2b.dev" is username for authentication
+
             - name: 'Run Apex tests'
               run: sfdx force:apex:test:run -u "anitha.p@joann.b2b.dev"
 
