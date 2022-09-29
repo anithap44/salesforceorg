@@ -53,3 +53,23 @@ jobs:
                 source_ref: ${{ github.ref }}
                 target_branch: 'uat'
                 commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
+              
+              # Store secret for uat hub, Auth URL Store in UATHUB_SFDX_URL file in  github
+            - name: 'Populate auth file with UATHUB_SFDX_URL secret'
+              shell: bash
+              run: |
+                  echo ${{ secrets.UATHUB_SFDX_URL}} > ./UATHUB_SFDX_URL.txt
+                  secretFileSize=$(wc -c "./UATHUB_SFDX_URL.txt" | awk '{print $1}')
+                  if [ $secretFileSize == 1 ]; then
+                      echo "Missing UATHUB_SFDX_URL secret. Is this workflow running on a fork?";
+                      exit 1;
+                  fi
+            # Authenticate uat hub
+            - name: 'Authenticate Uat Hub'
+              run: sfdx auth:sfdxurl:store -f ./UATHUB_SFDX_URL.txt -a uathub -d
+
+            
+             # Run Apex tests in scratch org ,api@inspirationdirect.b2b.uat is user name for authentication
+            - name: 'delop to uat'
+              run: sfdx force:sopurce:deploy -u "api@inspirationdirect.b2b.uat"  
+            
