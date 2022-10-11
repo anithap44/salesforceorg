@@ -1,13 +1,12 @@
 # Unique name for this workflow
-name: cd
+name: CI
 
 # Definition when the workflow should run
-# Triggers the workflow on pull request events but only for the "uat" branch
 on:
-    workflow_dispatch:
-    pull_request:
-         branches:
-            - uat
+  workflow_dispatch:
+  pull_request:
+        branches:
+           - uat
         
 # Jobs to be executed
 jobs:
@@ -28,36 +27,37 @@ jobs:
                   echo "$HOME/sfdx/bin" >> $GITHUB_PATH
                   ~/sfdx/bin/sfdx version
             
-            # Store secret for dev hub, Auth URL Store in DEVHUB_SFDX_URL file in  github secrets
+             # Store secret for dev hub, Auth URL Store in DEVHUB_SFDX_URL file in  github
             - name: 'Populate auth file with DEVHUB_SFDX_URL secret'
               shell: bash
               run: |
                   echo ${{ secrets.DEVHUB_SFDX_URL}} > ./DEVHUB_SFDX_URL.txt
                   secretFileSize=$(wc -c "./DEVHUB_SFDX_URL.txt" | awk '{print $1}')
                   if [ $secretFileSize == 1 ]; then
-                      echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
-                      exit 1;
+                    echo "Missing DEVHUB_SFDX_URL secret. Is this workflow running on a fork?";
+                    exit 1;
                   fi
-            # Authenticate dev hub
+          
+              # Authenticate dev hub
             - name: 'Authenticate Dev Hub'
               run: sfdx auth:sfdxurl:store -f ./DEVHUB_SFDX_URL.txt -a devhub -d
 
             
              # Run Apex tests in scratch org ,api@inspirationdirect.b2b.dev is user name for authentication
             - name: 'Run Apex tests'
-              run: sfdx force:apex:test:run -u "anitha.p@joann.b2b.dev"
+              run: sfdx force:apex:test:run --testlevel RunLocalTests -u "api@inspirationdirect.b2b.dev"
 
-               # Merge to main,target_branch  main 
+             # Merge to uat,target_branch    
             - uses: everlytic/branch-merge@1.1.2
               with:
                 github_token: ${{ github.token }}
-                source_ref: ${{ github.ref }}
+                source_ref: ${{ 'refs/heads/develop' }}
                 target_branch: 'main'
                 commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
-				
-           # Store secret for prod hub, Auth URL Store in PRODHUB_SFDX_URL file in  github secrets
+
+            # Store secret for prod hub, Auth URL Store in PRODHUB_SFDX_URL file in  githu
             - name: 'Populate auth file with PRODHUB_SFDX_URL secret'
-              shell: bash
+              shell: bash    
               run: |
                   echo ${{ secrets.PRODHUB_SFDX_URL}} > ./PRODHUB_SFDX_URL.txt
                   secretFileSize=$(wc -c "./PRODHUB_SFDX_URL.txt" | awk '{print $1}')
@@ -65,10 +65,13 @@ jobs:
                       echo "Missing PRODHUB_SFDX_URL secret. Is this workflow running on a fork?";
                       exit 1;
                   fi
-            # Authenticate prod hub
-            - name: 'Authenticate Prod Hub'
-              run: sfdx auth:sfdxurl:store -f ./PRODHUB_SFDX_URL.txt -a devhub -d  
-              
-             # deploy to Production
+          
+            # Authenticate UAT hub
+            - name: 'Authenticate PROD Hub'
+              run: sfdx auth:sfdxurl:store -f ./PRODHUB_SFDX_URL.txt -a prodhub -d
+
+            
+            # Run Apex tests in scratch org ,api@inspirationdirect.b2b.uat is user name for authentication
+
             - name: 'Deploy to prod'
-              run: sfdx run:force:sopurce:deploy -u "api@inspirationdirect.b2b"
+              run: sfdx force:sopurce:deploy  -u "api@inspirationdirect.b2b"
