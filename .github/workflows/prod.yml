@@ -46,10 +46,31 @@ jobs:
             - name: 'Run Apex tests'
               run: sfdx force:apex:test:run -u "anitha.p@joann.b2b.dev"
 
-               # Merge to uat,target_branch    
+               # Merge to main,target_branch    
             - uses: everlytic/branch-merge@1.1.2
               with:
                 github_token: ${{ github.token }}
                 source_ref: ${{ github.ref }}
                 target_branch: 'main'
                 commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
+				
+	         
+             # Store secret for Prod hub, Auth URL Store in PRODHUB_SFDX_URL file in  github
+            - name: 'Populate auth file with PRODHUB_SFDX_URL secret'
+              shell: bash
+              run: |
+                  echo ${{ secrets.PRODHUB_SFDX_URL}} > ./PRODHUB_SFDX_URL.txt
+                  secretFileSize=$(wc -c "./PRODHUB_SFDX_URL.txt" | awk '{print $1}')
+                  if [ $secretFileSize == 1 ]; then
+                      echo "Missing PRODHUB_SFDX_URL secret. Is this workflow running on a fork?";
+                      exit 1;
+                  fi
+          
+             # Authenticate Prod hub
+            - name: 'Authenticate PROD Hub'
+              run: sfdx auth:sfdxurl:store -f ./PRODHUB_SFDX_URL.txt -a prodhub -d
+
+            
+              # Run Apex tests in scratch org ,api@inspirationdirect.b2b is user name for authentication
+            - name: 'Deploy to PROD'
+              run: sfdx force:sopurce:deploy -u "api@inspirationdirect.b2b"   
