@@ -45,7 +45,7 @@ jobs:
             
              # Run Apex tests in scratch org ,api@inspirationdirect.b2b.dev is user name for authentication
             - name: 'Run Apex tests'
-              run: sfdx force:apex:test:run --testlevel RunLocalTests -u "api@inspirationdirect.b2b.dev"
+              run: sfdx force:apex:test:run --testlevel RunLocalTests -u "anitha.p@joann.b2b.dev"
 
              # Merge to uat,target_branch    
             - uses: everlytic/branch-merge@1.1.2
