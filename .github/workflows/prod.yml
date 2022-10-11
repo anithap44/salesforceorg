@@ -53,7 +53,8 @@ jobs:
                 source_ref: ${{ github.ref }}
                 target_branch: 'main'
                 commit_message_template: '[Automated] Merged {source_ref} into target {target_branch}'
-	      # Store secret for Prod hub, Auth URL Store in PRODHUB_SFDX_URL file in  github
+	     
+	     # Store secret for Prod hub, Auth URL Store in PRODHUB_SFDX_URL file in  github
             - name: 'Populate auth file with PRODHUB_SFDX_URL secret'
               shell: bash
               run: |
